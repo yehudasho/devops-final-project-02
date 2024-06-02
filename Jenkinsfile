@@ -96,15 +96,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Trigger next update pipeline') {
-            when {
-                branch 'main'
-            }
-            steps {
-                build job: 'update', parameters: [string(name: 'DOCKERTAG', value: env.BUILD_NUMBER)]
-            }
-        }
     }
 
    post {
