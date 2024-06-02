@@ -14,11 +14,11 @@ pipeline {
               - name: mongodb
                 image: mongo:latest
                 env:
-                - name: POSTGRES_USER
-                  value: "mongo"
-                - name: POSTGRES_PASSWORD
-                  value: "mongo"
-                - name: POSTGRES_DB
+                - name: MONGO_INITDB_ROOT_USERNAME
+                  value: "root"
+                - name: MONGO_INITDB_ROOT_PASSWORD
+                  value: "maor"
+                - name: MONGO_INITDB_DATABASE
                   value: "mydb"
                 - name: HOST
                   value: "localhost"
