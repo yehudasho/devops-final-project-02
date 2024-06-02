@@ -14,11 +14,11 @@ pipeline {
               - name: mongodb
                 image: mongo:latest
                 env:
-                - name: MONGO_INITDB_ROOT_USERNAME
-                  value: "root"
-                - name: MONGO_INITDB_ROOT_PASSWORD
-                  value: "maor"
-                - name: MONGO_INITDB_DATABASE
+                - name: POSTGRES_USER
+                  value: "mongo"
+                - name: POSTGRES_PASSWORD
+                  value: "mongo"
+                - name: POSTGRES_DB
                   value: "mydb"
                 - name: HOST
                   value: "localhost"
@@ -70,7 +70,7 @@ pipeline {
                     script {
                         withDockerRegistry(credentialsId: 'docker-hub'){
                         // Build Docker image
-                            sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ."
+                            sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ./test1"
                             sh "docker build -t ${DOCKER_IMAGE}:latest ."
 
                         // Push Docker image to Docker Hub
@@ -124,7 +124,8 @@ pipeline {
         failure {
             emailext body: 'The build failed. Please check the build logs for details.',
                      subject: "Build failed: ${env.BUILD_NUMBER}",
-                     to: 'ofekbarel10@gmail.com'
+                     to: 'avidanos75@gmail.com
+'
         }
     }
 }
