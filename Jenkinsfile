@@ -1,9 +1,9 @@
 pipeline {
     agent {
-        kubernetes{
+        kubernetes {
             yaml '''
             apiVersion: v1
-            Kind: Pod
+            kind: Pod
             spec:
               containers:
               - name: maven
@@ -27,57 +27,50 @@ pipeline {
                 imagePullPolicy: Always
                 securityContext:
                   privileged: true
-
             '''
         }
     }
 
-
-    environment{
+    environment {
         DOCKER_IMAGE = "maoravidan/projectapp"
-
+        FASTAPI_IMAGE = "maoravidan/projectapp"
     }
 
-
-
-    stages{
+    stages {
         stage('Checkout Code') {
             steps {
                 checkout scm
             }
         }
 
-
-
-        stage('maven version'){
-            steps{
-                container('maven'){
+        stage('maven version') {
+            steps {
+                container('maven') {
                     sh 'mvn -version'
                 }
             }
         }
 
-
-
-
-
-        stage('Build and Push Docker Image') {
+        stage('Build and Push Docker Images') {
             when {
                 branch 'main'
             }
             steps {
                 container('ez-docker-helm-build') {
                     script {
-                        withDockerRegistry(credentialsId: 'docker-hub'){
-                        // Build Docker image
+                        withDockerRegistry(credentialsId: 'docker-hub') {
+                            // Build and Push Maven Docker image
                             sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ./test1"
-                            sh "docker build -t ${DOCKER_IMAGE}:latest ."
-
-                        // Push Docker image to Docker Hub
+                            sh "docker build -t ${DOCKER_IMAGE}:latest ./test1"
                             sh "docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
                             sh "docker push ${DOCKER_IMAGE}:latest"
-                        }
 
+                            // Build and Push FastAPI Docker image
+                            sh "docker build -t ${FASTAPI_IMAGE}:${env.BUILD_NUMBER} ./fast_api"
+                            sh "docker build -t ${FASTAPI_IMAGE}:react ./fast_api"
+                            sh "docker push ${FASTAPI_IMAGE}:${env.BUILD_NUMBER}"
+                            sh "docker push ${FASTAPI_IMAGE}:fastapi"
+                        }
                     }
                 }
             }
@@ -89,7 +82,7 @@ pipeline {
                     branch 'main'
                 }
             }
-            steps{
+            steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'maor_git', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')]) {
                         sh """
@@ -104,9 +97,7 @@ pipeline {
             }
         }
 
-
-
-        stage('Trigger next update pipline') {
+        stage('Trigger next update pipeline') {
             when {
                 branch 'main'
             }
@@ -114,11 +105,7 @@ pipeline {
                 build job: 'update', parameters: [string(name: 'DOCKERTAG', value: env.BUILD_NUMBER)]
             }
         }
-
-
     }
-
-
 
     post {
         failure {
