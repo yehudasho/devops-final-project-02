@@ -61,13 +61,13 @@ pipeline {
                         withDockerRegistry(credentialsId: 'docker-hub') {
                             // Build and Push Maven Docker image
                             sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ./test1"
-                            sh "docker build -t ${DOCKER_IMAGE}:latest ./test1"
+                            sh "docker build -t ${DOCKER_IMAGE}:react ./test1"
                             sh "docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                            sh "docker push ${DOCKER_IMAGE}:latest"
+                            sh "docker push ${DOCKER_IMAGE}:react"
 
                             // Build and Push FastAPI Docker image
                             sh "docker build -t ${FASTAPI_IMAGE}:${env.BUILD_NUMBER} ./fast_api"
-                            sh "docker build -t ${FASTAPI_IMAGE}:react ./fast_api"
+                            sh "docker build -t ${FASTAPI_IMAGE}:fastapi ./fast_api"
                             sh "docker push ${FASTAPI_IMAGE}:${env.BUILD_NUMBER}"
                             sh "docker push ${FASTAPI_IMAGE}:fastapi"
                         }
