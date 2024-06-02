@@ -125,7 +125,6 @@ pipeline {
             emailext body: 'The build failed. Please check the build logs for details.',
                      subject: "Build failed: ${env.BUILD_NUMBER}",
                      to: 'avidanos75@gmail.com'
-'
         }
     }
 }
