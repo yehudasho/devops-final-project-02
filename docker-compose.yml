@@ -25,7 +25,7 @@ services:
 
   react:
     build: ./test1
-    image: maoravidan/projectapp:react
+    image: maoravidan/projectapp:latest
     networks:
       my_network:
         ipv4_address: 172.16.0.3

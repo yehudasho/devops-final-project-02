@@ -19,7 +19,7 @@ MONGO_DB_HOST = 'mongodb'
 MONGO_DB_PORT = 27017
 MONGO_DB_NAME = 'mydb'
 
-client = MongoClient(f"mongodb://{MONGO_DB_USERNAME}:{MONGO_DB_PASSWORD}@{MONGO_DB_HOST}:{MONGO_DB_PORT}")
+client = MongoClient(f"mongodb://{MONGO_DB_USERNAME}:{MONGO_DB_PASSWORD}@mongodb")
 db = client[MONGO_DB_NAME]
 
 class Customer(BaseModel):
@@ -35,7 +35,7 @@ class Product(BaseModel):
 @app.get("/customers")
 def get_customers():
     try:
-        customers = list(db.customers.find({}, {"_id": 0}))  # Fetch all customers and exclude the MongoDB `_id` field
+        customers = list(db.customers.find({}, {"_id": 0}))  # Fetch all customers and exclude the MongoDB _id field
         return {"table": customers}
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to fetch customers")
@@ -43,7 +43,7 @@ def get_customers():
 @app.get("/product")
 def get_products():
     try:
-        products = list(db.products.find({}, {"_id": 0}))  # Fetch all products and exclude the MongoDB `_id` field
+        products = list(db.products.find({}, {"_id": 0}))  # Fetch all products and exclude the MongoDB _id field
         return {"table": products}
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to fetch products")

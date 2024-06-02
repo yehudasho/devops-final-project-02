@@ -1,7 +1,14 @@
-FROM alpine:latest
+# Stage 1: Build the React app
+FROM node:16-alpine AS build
 WORKDIR /app
-COPY . .
-RUN apk update && \
-    apk add --no-cache nodejs npm
-EXPOSE 3000
-CMD ["npm", "start"]
+COPY package.json ./
+COPY package-lock.json ./
+RUN npm install
+COPY . ./
+RUN npm run build
+
+# Stage 2: Serve the React app using Nginx
+FROM nginx:alpine
+COPY --from=build /app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
