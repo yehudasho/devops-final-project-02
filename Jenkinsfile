@@ -20,29 +20,7 @@ pipeline {
                   value: "maor"
                 - name: MONGO_INITDB_DATABASE
                   value: "mydb"
-              - name: dind
-                image: docker:latest
-                command:
-                - dockerd-entrypoint.sh
-                args:
-                - --host=tcp://127.0.0.1:2375
-                - --host=unix:///var/run/docker.sock
-                securityContext:
-                  privileged: true
-                volumeMounts:
-                - name: docker-graph-storage
-                  mountPath: /var/lib/docker
-              - name: ez-docker-helm-build
-                image: ezezeasy/ez-docker-helm-build:1.41
-                imagePullPolicy: Always
-                env:
-                - name: DOCKER_HOST
-                  value: tcp://127.0.0.1:2375
-                securityContext:
-                  privileged: true
-            volumes:
-            - name: docker-graph-storage
-              emptyDir: {}
+              
             '''
         }
     }
