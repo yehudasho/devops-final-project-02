@@ -14,11 +14,11 @@ pipeline {
               - name: mongodb
                 image: mongo:latest
                 env:
-                - name: POSTGRES_USER
-                  value: "mongo"
-                - name: POSTGRES_PASSWORD
-                  value: "mongo"
-                - name: POSTGRES_DB
+                - name: MONGO_INITDB_ROOT_USERNAME
+                  value: "root"
+                - name: MONGO_INITDB_ROOT_PASSWORD
+                  value: "maor"
+                - name: MONGO_INITDB_DATABASE
                   value: "mydb"
                 - name: HOST
                   value: "localhost"
@@ -33,7 +33,6 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "maoravidan/projectapp"
-        FASTAPI_IMAGE = "maoravidan/projectapp"
     }
 
     stages {
@@ -60,43 +59,17 @@ pipeline {
                     script {
                         withDockerRegistry(credentialsId: 'docker-hub') {
                             // Build and Push Maven Docker image
-                            sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ./test1"
                             sh "docker build -t ${DOCKER_IMAGE}:react ./test1"
-                            sh "docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
                             sh "docker push ${DOCKER_IMAGE}:react"
 
                             // Build and Push FastAPI Docker image
-                            sh "docker build -t ${FASTAPI_IMAGE}:${env.BUILD_NUMBER} ./fast_api"
-                            sh "docker build -t ${FASTAPI_IMAGE}:fastapi ./fast_api"
-                            sh "docker push ${FASTAPI_IMAGE}:${env.BUILD_NUMBER}"
-                            sh "docker push ${FASTAPI_IMAGE}:fastapi"
+                            sh "docker build -t ${DOCKER_IMAGE}:fastapi ./fast_api"
+                            sh "docker push ${DOCKER_IMAGE}:fastapi"
                         }
                     }
                 }
             }
         }
-
-        stage('merge request') {
-            when {
-                not {
-                    branch 'main'
-                }
-            }
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'maor_git', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')]) {
-                        sh """
-                        curl -X POST -u ${GITHUB_USER}:${GITHUB_TOKEN} -d '{
-                            "title": "Merge feature to main",
-                            "head": "feature",
-                            "base": "main"
-                        }' https://api.github.com/repos/maor75/Sela_Project/pulls
-                        """
-                    }
-                }
-            }
-        }
-    }
 
    post {
     always {
