@@ -20,7 +20,6 @@ pipeline {
                   value: "maor"
                 - name: MONGO_INITDB_DATABASE
                   value: "mydb"
-              
             '''
         }
     }
@@ -40,20 +39,6 @@ pipeline {
             steps {
                 container('maven') {
                     sh 'mvn -version'
-                }
-            }
-        }
-
-        stage('Build Docker Images') {
-            steps {
-                container('ez-docker-helm-build') {
-                    script {
-                        // Build Maven Docker image
-                        sh "docker build -t ${DOCKER_IMAGE}:react ./test1"
-
-                        // Build FastAPI Docker image
-                        sh "docker build -t ${DOCKER_IMAGE}:fastapi ./fast_api"
-                    }
                 }
             }
         }
