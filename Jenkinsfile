@@ -20,11 +20,29 @@ pipeline {
                   value: "maor"
                 - name: MONGO_INITDB_DATABASE
                   value: "mydb"
+              - name: dind
+                image: docker:latest
+                command:
+                - dockerd-entrypoint.sh
+                args:
+                - --host=tcp://127.0.0.1:2375
+                - --host=unix:///var/run/docker.sock
+                securityContext:
+                  privileged: true
+                volumeMounts:
+                - name: docker-graph-storage
+                  mountPath: /var/lib/docker
               - name: ez-docker-helm-build
                 image: ezezeasy/ez-docker-helm-build:1.41
                 imagePullPolicy: Always
+                env:
+                - name: DOCKER_HOST
+                  value: tcp://127.0.0.1:2375
                 securityContext:
                   privileged: true
+            volumes:
+            - name: docker-graph-storage
+              emptyDir: {}
             '''
         }
     }
@@ -71,12 +89,12 @@ pipeline {
                     '''
                     // Run FastAPI container
                     sh '''
-                    docker run -d --name fastapi_app -p 8000:8000 ${DOCKER_IMAGE}:fastapi
+                    docker run -d --name fastapi_app -p 8080:80 ${DOCKER_IMAGE}:fastapi
                     '''
                     // Validate FastAPI service is running
                     sh '''
                     sleep 10
-                    curl -f http://localhost:8000
+                    curl -f http://localhost:8080
                     '''
                 }
             }
