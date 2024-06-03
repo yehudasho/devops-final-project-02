@@ -14,14 +14,12 @@ pipeline {
               - name: mongodb
                 image: mongo:latest
                 env:
-                - name: POSTGRES_USER
-                  value: "mongo"
-                - name: POSTGRES_PASSWORD
-                  value: "mongo"
-                - name: POSTGRES_DB
+                - name: MONGO_INITDB_ROOT_USERNAME
+                  value: "root"
+                - name: MONGO_INITDB_ROOT_PASSWORD
+                  value: "maor"
+                - name: MONGO_INITDB_DATABASE
                   value: "mydb"
-                - name: HOST
-                  value: "localhost"
               - name: ez-docker-helm-build
                 image: ezezeasy/ez-docker-helm-build:1.41
                 imagePullPolicy: Always
@@ -33,7 +31,6 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "maoravidan/projectapp"
-        FASTAPI_IMAGE = "maoravidan/projectapp"
     }
 
     stages {
@@ -51,63 +48,53 @@ pipeline {
             }
         }
 
-        stage('Build and Push Docker Images') {
-            when {
-                branch 'main'
-            }
+        stage('Build Docker Images') {
             steps {
                 container('ez-docker-helm-build') {
                     script {
-                        withDockerRegistry(credentialsId: 'docker-hub') {
-                            // Build and Push Maven Docker image
-                            sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ./test1"
-                            sh "docker build -t ${DOCKER_IMAGE}:latest ./test1"
-                            sh "docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                            sh "docker push ${DOCKER_IMAGE}:latest"
+                        // Build Maven Docker image
+                        sh "docker build -t ${DOCKER_IMAGE}:react ./test1"
 
-                            // Build and Push FastAPI Docker image
-                            sh "docker build -t ${FASTAPI_IMAGE}:${env.BUILD_NUMBER} ./fast_api"
-                            sh "docker build -t ${FASTAPI_IMAGE}:react ./fast_api"
-                            sh "docker push ${FASTAPI_IMAGE}:${env.BUILD_NUMBER}"
-                            sh "docker push ${FASTAPI_IMAGE}:fastapi"
-                        }
+                        // Build FastAPI Docker image
+                        sh "docker build -t ${DOCKER_IMAGE}:fastapi ./fast_api"
                     }
                 }
             }
         }
 
-        stage('merge request') {
-            when {
-                not {
-                    branch 'main'
-                }
-            }
+        stage('Run and Validate Containers') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'maor_git', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')]) {
-                        sh """
-                        curl -X POST -u ${GITHUB_USER}:${GITHUB_TOKEN} -d '{
-                            "title": "Merge feature to main",
-                            "head": "feature",
-                            "base": "main"
-                        }' https://api.github.com/repos/maor75/Sela_Project/pulls
-                        """
-                    }
+                    // Run MongoDB container
+                    sh '''
+                    docker run -d --name mongodb -e MONGO_INITDB_ROOT_USERNAME=root -e MONGO_INITDB_ROOT_PASSWORD=maor -e MONGO_INITDB_DATABASE=mydb -p 27017:27017 mongo:latest
+                    '''
+                    // Run FastAPI container
+                    sh '''
+                    docker run -d --name fastapi_app -p 8000:8000 ${DOCKER_IMAGE}:fastapi
+                    '''
+                    // Validate FastAPI service is running
+                    sh '''
+                    sleep 10
+                    curl -f http://localhost:8000
+                    '''
                 }
-            }
-        }
-
-        stage('Trigger next update pipeline') {
-            when {
-                branch 'main'
-            }
-            steps {
-                build job: 'update', parameters: [string(name: 'DOCKERTAG', value: env.BUILD_NUMBER)]
             }
         }
     }
 
     post {
+        always {
+            script {
+                // Stop and remove containers
+                sh 'docker stop mongodb fastapi_app || true'
+                sh 'docker rm mongodb fastapi_app || true'
+            }
+            echo 'Pipeline post'
+        }
+        success {
+            echo 'Pipeline succeeded!'
+        }
         failure {
             emailext body: 'The build failed. Please check the build logs for details.',
                      subject: "Build failed: ${env.BUILD_NUMBER}",
