@@ -32,7 +32,7 @@ pipeline {
     }
 
     environment {
-        DOCKER_IMAGE = "maoravidan/projectapp"
+        DOCKER_IMAGE = "dinghy123/final-project-02"
     }
 
     stages {
